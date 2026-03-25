@@ -3,6 +3,7 @@ module github.com/JuLima14/pinfra-studio
 go 1.25.5
 
 require (
+	github.com/JuLima14/claude-engine v0.1.0 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
