@@ -1,0 +1,22 @@
+# Binaries
+bin/
+*.exe
+
+# Data (runtime volumes)
+data/
+
+# IDE
+.idea/
+.vscode/
+
+# Frontend build
+web/node_modules/
+web/dist/
+
+# Test
+*.test
+coverage.html
+
+# Env
+.env
+.env.local
