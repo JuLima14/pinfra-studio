@@ -1,8 +1,13 @@
+import { Routes, Route } from 'react-router-dom'
+import { ProjectList } from '@/components/ProjectList'
+import { Layout } from '@/components/Layout'
+
 function App() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <h1 className="text-2xl font-bold p-8">Pinfra Studio</h1>
-    </div>
+    <Routes>
+      <Route path="/" element={<ProjectList />} />
+      <Route path="/projects/:id" element={<Layout />} />
+    </Routes>
   )
 }
 
