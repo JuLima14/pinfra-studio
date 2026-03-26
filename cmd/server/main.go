@@ -17,6 +17,8 @@ import (
 	"github.com/JuLima14/pinfra-studio/internal/sandbox"
 	"github.com/JuLima14/pinfra-studio/internal/services"
 	"github.com/JuLima14/pinfra-studio/internal/storage"
+	"encoding/json"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -102,6 +104,8 @@ func main() {
 
 	// 9. Setup Fiber app and routes
 	app := fiber.New(fiber.Config{
+		JSONEncoder: json.Marshal,
+		JSONDecoder: json.Unmarshal,
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			logger.Error("unhandled error", zap.Error(err))
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})

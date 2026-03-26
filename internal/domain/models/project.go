@@ -16,19 +16,19 @@ const (
 )
 
 type Project struct {
-	ID            uuid.UUID `gorm:"type:uuid;primaryKey"`
-	Name          string    `gorm:"not null"`
-	Slug          string    `gorm:"uniqueIndex;not null"`
-	Template      string    `gorm:"default:'next-app'"`
-	GitHubRepoURL string
-	GitHubBranch  string `gorm:"default:'main'"`
-	Status        string `gorm:"default:'active'"`
-	SetupStatus   string `gorm:"default:'scaffolding'"`
-	SetupError    string
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	Chats   []Chat
-	Sandbox *Sandbox
+	ID            uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
+	Name          string    `gorm:"not null" json:"name"`
+	Slug          string    `gorm:"uniqueIndex;not null" json:"slug"`
+	Template      string    `gorm:"default:'next-app'" json:"template"`
+	GitHubRepoURL string    `json:"githubRepoUrl,omitempty"`
+	GitHubBranch  string    `gorm:"default:'main'" json:"githubBranch"`
+	Status        string    `gorm:"default:'active'" json:"status"`
+	SetupStatus   string    `gorm:"default:'scaffolding'" json:"setupStatus"`
+	SetupError    string    `json:"setupError,omitempty"`
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
+	Chats         []Chat    `json:"chats,omitempty"`
+	Sandbox       *Sandbox  `json:"sandbox,omitempty"`
 }
 
 func (p *Project) BeforeCreate(tx *gorm.DB) error {

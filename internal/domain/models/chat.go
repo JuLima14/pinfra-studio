@@ -8,17 +8,17 @@ import (
 )
 
 type Chat struct {
-	ID              uuid.UUID `gorm:"type:uuid;primaryKey"`
-	ProjectID       uuid.UUID `gorm:"type:uuid;not null;index"`
-	Title           string
-	BranchName      string `gorm:"not null"`
-	ClaudeSessionID string
-	Status          string `gorm:"default:'active'"`
-	IsActive        bool   `gorm:"default:false"`
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
-	Project  Project
-	Messages []Message
+	ID              uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
+	ProjectID       uuid.UUID `gorm:"type:uuid;not null;index" json:"projectId"`
+	Title           string    `json:"title,omitempty"`
+	BranchName      string    `gorm:"not null" json:"branchName"`
+	ClaudeSessionID string    `json:"-"`
+	Status          string    `gorm:"default:'active'" json:"status"`
+	IsActive        bool      `gorm:"default:false" json:"isActive"`
+	CreatedAt       time.Time `json:"createdAt"`
+	UpdatedAt       time.Time `json:"updatedAt"`
+	Project         Project   `json:"-"`
+	Messages        []Message `json:"messages,omitempty"`
 }
 
 func (c *Chat) BeforeCreate(tx *gorm.DB) error {

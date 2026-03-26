@@ -15,15 +15,15 @@ const (
 )
 
 type Message struct {
-	ID         uuid.UUID `gorm:"type:uuid;primaryKey"`
-	ChatID     uuid.UUID `gorm:"type:uuid;not null;index"`
-	Role       string    `gorm:"not null"`
-	Content    string    `gorm:"type:text"`
-	ToolName   string
-	ToolInput  string `gorm:"type:jsonb"`
-	ToolResult string `gorm:"type:jsonb"`
-	CreatedAt  time.Time
-	Chat Chat
+	ID         uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
+	ChatID     uuid.UUID `gorm:"type:uuid;not null;index" json:"chatId"`
+	Role       string    `gorm:"not null" json:"role"`
+	Content    string    `gorm:"type:text" json:"content"`
+	ToolName   string    `json:"toolName,omitempty"`
+	ToolInput  string    `gorm:"type:jsonb" json:"toolInput,omitempty"`
+	ToolResult string    `gorm:"type:jsonb" json:"toolResult,omitempty"`
+	CreatedAt  time.Time `json:"createdAt"`
+	Chat       Chat      `json:"-"`
 }
 
 func (m *Message) BeforeCreate(tx *gorm.DB) error {
