@@ -189,8 +189,8 @@ CRITICAL RULES:
 - Just write code. No planning, no brainstorming, no asking for permission.`, sbx.Port)
 	}
 
-	// Run Claude async
-	go s.runClaude(chatID, r, content, systemPrompt)
+	// Run Claude async (pass session ID for conversation continuity)
+	go s.runClaude(chatID, r, content, systemPrompt, chat.ClaudeSessionID)
 
 	return nil
 }
@@ -216,7 +216,7 @@ func (s *ChatService) getOrCreateRunner(project *models.Project) *runner.Runner 
 	return r
 }
 
-func (s *ChatService) runClaude(chatID uuid.UUID, r *runner.Runner, prompt string, systemPrompt string) {
+func (s *ChatService) runClaude(chatID uuid.UUID, r *runner.Runner, prompt string, systemPrompt string, claudeSessionID string) {
 	ctx := context.Background()
 	channelID := chatID.String()
 	var assistantText string
@@ -224,6 +224,7 @@ func (s *ChatService) runClaude(chatID uuid.UUID, r *runner.Runner, prompt strin
 	result, err := r.Run(ctx, runner.RunOptions{
 		Prompt:       prompt,
 		SystemPrompt: systemPrompt,
+		SessionID:    claudeSessionID,
 		OnStream: func(chunk events.StreamChunk) {
 			switch chunk.Type {
 			case events.ChunkText:
