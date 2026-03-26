@@ -155,8 +155,8 @@ export function Layout() {
               <div className="flex items-center border-b border-border px-3 py-1.5">
                 <TabsList>
                   <TabsTrigger value="preview">Preview</TabsTrigger>
-                  <TabsTrigger value="code">Code</TabsTrigger>
                   <TabsTrigger value="files">Files</TabsTrigger>
+                  <TabsTrigger value="code">Code</TabsTrigger>
                 </TabsList>
               </div>
 
