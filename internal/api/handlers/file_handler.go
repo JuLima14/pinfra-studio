@@ -106,8 +106,7 @@ func (h *FileHandler) FileContent(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	c.Set("Content-Type", "text/plain; charset=utf-8")
-	return c.Send(content)
+	return c.JSON(fiber.Map{"content": string(content), "path": relPath})
 }
 
 // buildFileTree recursively builds a file tree rooted at dir.
