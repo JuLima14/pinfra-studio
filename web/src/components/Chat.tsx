@@ -133,17 +133,15 @@ function MessageBubble({ message }: { message: UIMessage }) {
         </div>
       )}
 
-      {/* Text content as bubble (only if there's text) */}
+      {/* Text content — no background, plain text like v0 */}
       {message.content && (
-        <div className="flex justify-start">
-          <div className="max-w-[85%] rounded-2xl bg-muted px-4 py-2.5 text-sm text-foreground">
-            <p className="whitespace-pre-wrap leading-relaxed">
-              {message.content}
-              {message.isStreaming && (
-                <span className="ml-0.5 inline-block h-3.5 w-0.5 animate-pulse bg-current align-middle" />
-              )}
-            </p>
-          </div>
+        <div className="px-3 text-sm text-foreground">
+          <p className="whitespace-pre-wrap leading-relaxed">
+            {message.content}
+            {message.isStreaming && (
+              <span className="ml-0.5 inline-block h-3.5 w-0.5 animate-pulse bg-current align-middle" />
+            )}
+          </p>
         </div>
       )}
 
