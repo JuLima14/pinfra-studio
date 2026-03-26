@@ -208,11 +208,12 @@ func (s *ChatService) runClaude(chatID uuid.UUID, r *runner.Runner, prompt strin
 			case events.ChunkToolUse:
 				// Save tool use as separate message
 				inputJSON, _ := json.Marshal(chunk.ToolInput)
+				inputStr := string(inputJSON)
 				toolMsg := &models.Message{
 					ChatID:    chatID,
 					Role:      models.RoleTool,
 					ToolName:  chunk.ToolName,
-					ToolInput: string(inputJSON),
+					ToolInput: &inputStr,
 				}
 				s.messageRepo.Create(ctx, toolMsg)
 			}

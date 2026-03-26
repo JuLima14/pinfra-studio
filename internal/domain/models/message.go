@@ -19,9 +19,9 @@ type Message struct {
 	ChatID     uuid.UUID `gorm:"type:uuid;not null;index" json:"chatId"`
 	Role       string    `gorm:"not null" json:"role"`
 	Content    string    `gorm:"type:text" json:"content"`
-	ToolName   string    `json:"toolName,omitempty"`
-	ToolInput  string    `gorm:"type:jsonb" json:"toolInput,omitempty"`
-	ToolResult string    `gorm:"type:jsonb" json:"toolResult,omitempty"`
+	ToolName   string  `json:"toolName,omitempty"`
+	ToolInput  *string `gorm:"type:jsonb" json:"toolInput,omitempty"`
+	ToolResult *string `gorm:"type:jsonb" json:"toolResult,omitempty"`
 	CreatedAt  time.Time `json:"createdAt"`
 	Chat       Chat      `json:"-"`
 }
