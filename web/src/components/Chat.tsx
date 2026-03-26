@@ -19,6 +19,20 @@ import { cn } from '@/lib/utils'
 import type { UIMessage, ToolUse } from '@/hooks/useChat'
 import type { Chat as ChatType } from '@/lib/api'
 
+// Tools that add noise to the chat — hide from UI
+const HIDDEN_TOOLS = new Set([
+  'TodoWrite',
+  'TodoRead',
+  'Agent',
+  'Task',
+  'WebSearch',
+  'WebFetch',
+  'LSP',
+  'NotebookEdit',
+  'EnterPlanMode',
+  'ExitPlanMode',
+])
+
 interface ChatProps {
   messages: UIMessage[]
   chats: ChatType[]
@@ -124,12 +138,14 @@ function MessageBubble({ message }: { message: UIMessage }) {
   // Assistant message: tool uses rendered as separate items OUTSIDE the bubble
   return (
     <div className="space-y-1">
-      {/* Tool uses as v0-style list items */}
+      {/* Tool uses as v0-style list items (filter out noise) */}
       {hasToolUses && (
         <div className="-mx-1">
-          {message.toolUses!.map((tu) => (
-            <ToolUseItem key={tu.id} toolUse={tu} />
-          ))}
+          {message.toolUses!
+            .filter((tu) => !HIDDEN_TOOLS.has(tu.toolName))
+            .map((tu) => (
+              <ToolUseItem key={tu.id} toolUse={tu} />
+            ))}
         </div>
       )}
 
