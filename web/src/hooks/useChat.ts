@@ -2,12 +2,13 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import type { Chat, StreamChunk } from '@/lib/api'
 import {
   getChats,
+  getChat as apiGetChat,
   createChat as apiCreateChat,
   activateChat,
   sendMessage as apiSendMessage,
   cancelMessage as apiCancelMessage,
+  getSSEUrl,
 } from '@/lib/api'
-import { getSSEUrl } from '@/lib/api'
 
 export interface UIMessage {
   id: string
@@ -118,6 +119,25 @@ export function useChat(projectId: string): UseChatReturn {
     [projectId, closeSSE]
   )
 
+  const loadMessagesForChat = useCallback(
+    async (chatId: string) => {
+      try {
+        const chat = await apiGetChat(projectId, chatId)
+        if (!mountedRef.current) return
+        // Convert API messages to UIMessages
+        const msgs: UIMessage[] = (chat.messages ?? []).map((m) => ({
+          id: m.id,
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+        }))
+        setMessages(msgs)
+      } catch {
+        setMessages([])
+      }
+    },
+    [projectId]
+  )
+
   const loadChats = useCallback(async () => {
     if (!projectId) return
     try {
@@ -126,12 +146,16 @@ export function useChat(projectId: string): UseChatReturn {
       setChats(list)
       const active = list.find((c) => c.isActive) ?? list[0] ?? null
       setActiveChat(active)
+      // Load messages for the active chat
+      if (active) {
+        await loadMessagesForChat(active.id)
+      }
     } catch {
       // ignore
     } finally {
       if (mountedRef.current) setIsLoading(false)
     }
-  }, [projectId])
+  }, [projectId, loadMessagesForChat])
 
   useEffect(() => {
     mountedRef.current = true
@@ -188,8 +212,10 @@ export function useChat(projectId: string): UseChatReturn {
       await activateChat(projectId, chatId)
       setActiveChat(chat)
       setChats((prev) => prev.map((c) => ({ ...c, isActive: c.id === chatId })))
+      // Load persisted messages for this chat
+      await loadMessagesForChat(chatId)
     },
-    [chats, projectId, closeSSE]
+    [chats, projectId, closeSSE, loadMessagesForChat]
   )
 
   const createChat = useCallback(async () => {

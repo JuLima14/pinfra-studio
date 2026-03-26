@@ -33,6 +33,7 @@ export interface Chat {
   isActive: boolean
   createdAt: string
   updatedAt: string
+  messages?: Message[]
 }
 
 export interface Message {
