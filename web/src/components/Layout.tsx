@@ -127,7 +127,7 @@ export function Layout() {
       <div className="flex-1 overflow-hidden">
         <PanelGroup orientation="horizontal" className="h-full">
           {/* Left panel - Chat */}
-          <Panel defaultSize={35} minSize={20} maxSize={60}>
+          <Panel defaultSize="35%" minSize={280} maxSize={600}>
             <div className="flex h-full flex-col border-r border-border">
               <Chat
                 messages={messages}
@@ -146,7 +146,7 @@ export function Layout() {
           <PanelResizeHandle className="w-1 cursor-col-resize bg-border transition-colors hover:bg-primary/30 active:bg-primary/50" />
 
           {/* Right panel - Preview/Code/Files */}
-          <Panel defaultSize={65} minSize={30}>
+          <Panel defaultSize="65%" minSize={400}>
             <Tabs
               value={activeTab}
               onValueChange={setActiveTab}
