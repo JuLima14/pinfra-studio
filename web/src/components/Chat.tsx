@@ -7,8 +7,13 @@ import {
   MessageSquare,
   Plus,
   ChevronDown,
-  Wrench,
+  ChevronRight,
+  Search,
+  FileEdit,
+  Terminal,
+  FileCode,
   Loader2,
+  Brain,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { UIMessage, ToolUse } from '@/hooks/useChat'
@@ -26,34 +31,61 @@ interface ChatProps {
   onCreateChat: () => void
 }
 
-function ToolUseCard({ toolUse }: { toolUse: ToolUse }) {
-  const [expanded, setExpanded] = useState(false)
+function getToolIcon(toolName: string) {
+  const name = toolName.toLowerCase()
+  if (name === 'read' || name === 'grep' || name === 'glob') return Search
+  if (name === 'write' || name === 'edit') return FileEdit
+  if (name === 'bash') return Terminal
+  if (name.includes('notebook')) return FileCode
+  return FileCode
+}
+
+function getToolLabel(toolUse: ToolUse): string {
   const filePath =
     (toolUse.toolInput?.path as string) ??
     (toolUse.toolInput?.file_path as string) ??
+    (toolUse.toolInput?.command as string) ??
     ''
 
+  if (!filePath) return toolUse.toolName
+
+  // Show just filename for Read/Write/Edit
+  const name = toolUse.toolName.toLowerCase()
+  if (name === 'read' || name === 'write' || name === 'edit' || name === 'grep' || name === 'glob') {
+    const shortPath = filePath.split('/').slice(-2).join('/')
+    return `${toolUse.toolName} ${shortPath}`
+  }
+  // For Bash, truncate command
+  if (name === 'bash') {
+    const cmd = filePath.length > 60 ? filePath.slice(0, 60) + '…' : filePath
+    return cmd
+  }
+  return `${toolUse.toolName} ${filePath}`
+}
+
+function ToolUseItem({ toolUse }: { toolUse: ToolUse }) {
+  const [expanded, setExpanded] = useState(false)
+  const Icon = getToolIcon(toolUse.toolName)
+  const label = getToolLabel(toolUse)
+
   return (
-    <div className="mt-2 rounded-lg border border-border bg-muted/30 text-xs">
+    <div>
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="flex w-full items-center gap-2 px-3 py-2 text-left text-muted-foreground hover:text-foreground"
+        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
       >
-        <Wrench className="size-3 shrink-0" />
-        <span className="font-medium">{toolUse.toolName}</span>
-        {filePath && (
-          <span className="truncate text-muted-foreground/70">{filePath}</span>
-        )}
-        <ChevronDown
+        <Icon className="size-4 shrink-0 text-muted-foreground/70" />
+        <span className="flex-1 truncate">{label}</span>
+        <ChevronRight
           className={cn(
-            'ml-auto size-3 shrink-0 transition-transform',
-            expanded && 'rotate-180'
+            'size-3.5 shrink-0 text-muted-foreground/50 transition-transform',
+            expanded && 'rotate-90'
           )}
         />
       </button>
       {expanded && toolUse.toolInput && (
-        <div className="border-t border-border px-3 py-2">
+        <div className="mb-1 ml-9 mr-3 rounded-md bg-muted/30 px-3 py-2">
           <pre className="whitespace-pre-wrap break-all font-mono text-[11px] text-muted-foreground">
             {JSON.stringify(toolUse.toolInput, null, 2)}
           </pre>
@@ -63,33 +95,62 @@ function ToolUseCard({ toolUse }: { toolUse: ToolUse }) {
   )
 }
 
+function ThinkingIndicator({ text }: { text: string }) {
+  return (
+    <button
+      type="button"
+      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-muted-foreground"
+    >
+      <Brain className="size-4 shrink-0 text-purple-400/70" />
+      <span>{text}</span>
+    </button>
+  )
+}
+
 function MessageBubble({ message }: { message: UIMessage }) {
   const isUser = message.role === 'user'
+  const hasToolUses = message.toolUses && message.toolUses.length > 0
 
-  return (
-    <div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
-      <div
-        className={cn(
-          'max-w-[85%] rounded-2xl px-4 py-2.5 text-sm',
-          isUser
-            ? 'bg-primary text-primary-foreground'
-            : 'bg-muted text-foreground'
-        )}
-      >
-        <p className="whitespace-pre-wrap leading-relaxed">
-          {message.content}
-          {message.isStreaming && (
-            <span className="ml-0.5 inline-block h-3.5 w-0.5 animate-pulse bg-current align-middle" />
-          )}
-        </p>
-        {message.toolUses && message.toolUses.length > 0 && (
-          <div>
-            {message.toolUses.map((tu) => (
-              <ToolUseCard key={tu.id} toolUse={tu} />
-            ))}
-          </div>
-        )}
+  if (isUser) {
+    return (
+      <div className="flex justify-end">
+        <div className="max-w-[85%] rounded-2xl bg-primary px-4 py-2.5 text-sm text-primary-foreground">
+          <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+        </div>
       </div>
+    )
+  }
+
+  // Assistant message: tool uses rendered as separate items OUTSIDE the bubble
+  return (
+    <div className="space-y-1">
+      {/* Tool uses as v0-style list items */}
+      {hasToolUses && (
+        <div className="-mx-1">
+          {message.toolUses!.map((tu) => (
+            <ToolUseItem key={tu.id} toolUse={tu} />
+          ))}
+        </div>
+      )}
+
+      {/* Text content as bubble (only if there's text) */}
+      {message.content && (
+        <div className="flex justify-start">
+          <div className="max-w-[85%] rounded-2xl bg-muted px-4 py-2.5 text-sm text-foreground">
+            <p className="whitespace-pre-wrap leading-relaxed">
+              {message.content}
+              {message.isStreaming && (
+                <span className="ml-0.5 inline-block h-3.5 w-0.5 animate-pulse bg-current align-middle" />
+              )}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Streaming with no content yet — show thinking */}
+      {message.isStreaming && !message.content && !hasToolUses && (
+        <ThinkingIndicator text="Thinking..." />
+      )}
     </div>
   )
 }
