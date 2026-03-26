@@ -42,7 +42,7 @@ interface FileNodeProps {
 
 function FileNode({ entry, depth, onFileSelect, selectedFile }: FileNodeProps) {
   const [expanded, setExpanded] = useState(depth === 0)
-  const isDir = entry.type === 'directory' || entry.type === ('dir' as string)
+  const isDir = entry.isDir === true
   const hasChildren = isDir && entry.children && entry.children.length > 0
   const FileIcon = isDir ? (expanded ? FolderOpen : Folder) : getFileIcon(entry.name)
 

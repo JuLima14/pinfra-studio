@@ -53,7 +53,7 @@ export interface SandboxStatus {
 export interface FileEntry {
   name: string
   path: string
-  type: 'file' | 'directory'
+  isDir: boolean
   children?: FileEntry[]
   size?: number
 }
