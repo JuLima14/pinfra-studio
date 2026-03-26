@@ -166,8 +166,8 @@ function MessageBubble({ message }: { message: UIMessage }) {
         </div>
       )}
 
-      {/* Streaming with no content yet — show thinking */}
-      {message.isStreaming && !message.content && !hasToolUses && (
+      {/* Streaming with no text content yet — show thinking */}
+      {message.isStreaming && !message.content && (
         <ThinkingIndicator text="Thinking..." />
       )}
     </div>
