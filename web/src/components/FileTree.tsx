@@ -9,6 +9,7 @@ import {
   Image,
   Loader2,
   AlertCircle,
+  ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { FileEntry } from '@/lib/api'
@@ -41,7 +42,8 @@ interface FileNodeProps {
 
 function FileNode({ entry, depth, onFileSelect, selectedFile }: FileNodeProps) {
   const [expanded, setExpanded] = useState(depth === 0)
-  const isDir = entry.type === 'directory'
+  const isDir = entry.type === 'directory' || entry.type === ('dir' as string)
+  const hasChildren = isDir && entry.children && entry.children.length > 0
   const FileIcon = isDir ? (expanded ? FolderOpen : Folder) : getFileIcon(entry.name)
 
   const handleClick = () => {
@@ -62,7 +64,7 @@ function FileNode({ entry, depth, onFileSelect, selectedFile }: FileNodeProps) {
           'hover:bg-muted/50',
           !isDir && selectedFile === entry.path && 'bg-muted text-foreground',
           !isDir && selectedFile !== entry.path && 'text-muted-foreground hover:text-foreground',
-          isDir && 'font-medium text-foreground'
+          isDir && 'font-medium text-foreground cursor-pointer'
         )}
         style={{ paddingLeft: `${8 + depth * 16}px` }}
       >
@@ -73,11 +75,19 @@ function FileNode({ entry, depth, onFileSelect, selectedFile }: FileNodeProps) {
           )}
         />
         <span className="truncate">{entry.name}</span>
+        {isDir && hasChildren && (
+          <ChevronRight
+            className={cn(
+              'ml-auto size-3 shrink-0 text-muted-foreground/50 transition-transform',
+              expanded && 'rotate-90'
+            )}
+          />
+        )}
       </button>
 
-      {isDir && expanded && entry.children && entry.children.length > 0 && (
+      {isDir && expanded && hasChildren && (
         <div>
-          {entry.children.map((child) => (
+          {entry.children!.map((child) => (
             <FileNode
               key={child.path}
               entry={child}

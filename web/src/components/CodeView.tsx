@@ -140,9 +140,7 @@ export function CodeView({
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
         <FileCode className="size-8 opacity-40" />
-        <p className="text-sm">
-          Modified files will appear here as Claude edits them
-        </p>
+        <p className="text-sm">Send a message to see code changes here</p>
       </div>
     )
   }
