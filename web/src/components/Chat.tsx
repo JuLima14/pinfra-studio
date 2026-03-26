@@ -225,7 +225,7 @@ export function Chat({
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="flex flex-col gap-3 p-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
@@ -243,7 +243,7 @@ export function Chat({
           )}
           <div ref={bottomRef} />
         </div>
-      </ScrollArea>
+      </div>
 
       {/* Input */}
       <div className="border-t border-border p-3">
