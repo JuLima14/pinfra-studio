@@ -3,6 +3,8 @@ package services
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -114,9 +116,9 @@ func (s *ProjectService) setupProject(projectID uuid.UUID) {
 	ctx := context.Background()
 	projectDir := filepath.Join(s.dataDir, projectID.String())
 
-	s.emitSetup(projectID, models.SetupScaffolding, "Scaffolding Next.js project...")
+	// Step 1: Prepare project directory (fast — just creates dir + CLAUDE.md)
+	s.emitSetup(projectID, models.SetupScaffolding, "Preparing project directory...")
 
-	// Scaffold
 	if err := sandbox.ScaffoldNextApp(projectDir); err != nil {
 		s.logger.Error("Scaffold failed", zap.Error(err))
 		s.projectRepo.UpdateSetupStatus(ctx, projectID, models.SetupFailed, err.Error())
@@ -124,19 +126,9 @@ func (s *ProjectService) setupProject(projectID uuid.UUID) {
 		return
 	}
 
-	s.emitSetup(projectID, models.SetupInstalling, "Installing dependencies...")
+	// Step 2: Start sandbox container (it will scaffold Next.js inside Linux)
+	s.emitSetup(projectID, models.SetupScaffolding, "Starting container and scaffolding Next.js...")
 
-	// Git init
-	if err := s.gitService.Init(projectDir); err != nil {
-		s.logger.Error("Git init failed", zap.Error(err))
-		s.projectRepo.UpdateSetupStatus(ctx, projectID, models.SetupFailed, err.Error())
-		s.emitSetup(projectID, models.SetupFailed, err.Error())
-		return
-	}
-
-	s.emitSetup(projectID, models.SetupStarting, "Starting dev server...")
-
-	// Start sandbox
 	containerID, port, err := s.sandboxMgr.CreateAndStart(ctx, projectID.String(), projectDir)
 	if err != nil {
 		s.logger.Error("Sandbox start failed", zap.Error(err))
@@ -155,6 +147,51 @@ func (s *ProjectService) setupProject(projectID uuid.UUID) {
 	}
 	if err := s.sandboxRepo.Create(ctx, sbx); err != nil {
 		s.logger.Error("Save sandbox failed", zap.Error(err))
+	}
+
+	// Step 3: Wait for scaffold to complete inside container (poll for package.json)
+	s.emitSetup(projectID, models.SetupInstalling, "Installing dependencies inside container...")
+
+	packageJSON := filepath.Join(projectDir, "package.json")
+	maxWait := 120 * time.Second
+	pollInterval := 3 * time.Second
+	deadline := time.Now().Add(maxWait)
+
+	for time.Now().Before(deadline) {
+		if _, err := os.Stat(packageJSON); err == nil {
+			break
+		}
+		time.Sleep(pollInterval)
+	}
+
+	// Verify scaffold succeeded
+	if _, err := os.Stat(packageJSON); os.IsNotExist(err) {
+		s.logger.Error("Container scaffold timed out — no package.json after 2 min")
+		s.projectRepo.UpdateSetupStatus(ctx, projectID, models.SetupFailed, "Scaffold timed out")
+		s.emitSetup(projectID, models.SetupFailed, "Scaffold timed out after 2 minutes")
+		return
+	}
+
+	// Step 4: Wait for dev server to be ready (poll HTTP)
+	s.emitSetup(projectID, models.SetupStarting, "Waiting for dev server...")
+
+	devURL := fmt.Sprintf("http://localhost:%d", port)
+	deadline = time.Now().Add(90 * time.Second)
+
+	for time.Now().Before(deadline) {
+		resp, err := http.Get(devURL)
+		if err == nil {
+			resp.Body.Close()
+			if resp.StatusCode == 200 {
+				break
+			}
+		}
+		time.Sleep(pollInterval)
+	}
+
+	// Step 5: Git init after scaffold is done
+	if err := s.gitService.Init(projectDir); err != nil {
+		s.logger.Warn("Git init failed (non-fatal)", zap.Error(err))
 	}
 
 	s.projectRepo.UpdateSetupStatus(ctx, projectID, models.SetupReady, "")

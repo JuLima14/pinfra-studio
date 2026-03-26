@@ -28,6 +28,12 @@ func main() {
 	// 1. Load config
 	cfg := config.Load()
 
+	// 1b. Ensure data directory exists
+	if err := os.MkdirAll(cfg.DataDir, 0755); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to create data dir: %v\n", err)
+		os.Exit(1)
+	}
+
 	// 2. Connect PostgreSQL, auto-migrate
 	db, err := storage.Connect(cfg.DatabaseURL)
 	if err != nil {
