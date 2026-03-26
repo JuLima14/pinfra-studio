@@ -162,13 +162,26 @@ func (s *ChatService) SendMessage(ctx context.Context, chatID uuid.UUID, content
 	// Get or create runner for this project
 	r := s.getOrCreateRunner(project)
 
-	// Touch sandbox last active
+	// Build dynamic system prompt with sandbox context
+	var systemPrompt string
 	if sbx, err := s.sandboxRepo.FindByProject(ctx, project.ID); err == nil {
 		s.sandboxRepo.TouchLastActive(ctx, sbx.ID)
+		systemPrompt = fmt.Sprintf(`You are working inside Pinfra Studio, an AI-powered app builder.
+
+IMPORTANT CONTEXT:
+- This is a Next.js project with App Router (src/app/)
+- A live dev server is running at http://localhost:%d with hot reload
+- The user can see a live preview of every change you make instantly
+- You are editing files directly on the filesystem — changes appear in the preview automatically
+- Use TypeScript, Tailwind CSS, and the App Router conventions
+- Keep components in src/app/ or src/components/
+- Do NOT run 'npm run dev' — the dev server is already running
+- Do NOT run 'npm install' unless adding a new dependency
+- After making changes, briefly describe what you changed and how it looks`, sbx.Port)
 	}
 
 	// Run Claude async
-	go s.runClaude(chatID, r, content)
+	go s.runClaude(chatID, r, content, systemPrompt)
 
 	return nil
 }
@@ -194,13 +207,14 @@ func (s *ChatService) getOrCreateRunner(project *models.Project) *runner.Runner 
 	return r
 }
 
-func (s *ChatService) runClaude(chatID uuid.UUID, r *runner.Runner, prompt string) {
+func (s *ChatService) runClaude(chatID uuid.UUID, r *runner.Runner, prompt string, systemPrompt string) {
 	ctx := context.Background()
 	channelID := chatID.String()
 	var assistantText string
 
 	result, err := r.Run(ctx, runner.RunOptions{
-		Prompt: prompt,
+		Prompt:       prompt,
+		SystemPrompt: systemPrompt,
 		OnStream: func(chunk events.StreamChunk) {
 			switch chunk.Type {
 			case events.ChunkText:
