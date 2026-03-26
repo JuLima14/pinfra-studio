@@ -39,8 +39,10 @@ export interface Chat {
 export interface Message {
   id: string
   chatId: string
-  role: 'user' | 'assistant'
+  role: 'user' | 'assistant' | 'tool'
   content: string
+  toolName?: string
+  toolInput?: string
   createdAt: string
 }
 

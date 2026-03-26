@@ -124,12 +124,28 @@ export function useChat(projectId: string): UseChatReturn {
       try {
         const chat = await apiGetChat(projectId, chatId)
         if (!mountedRef.current) return
-        // Convert API messages to UIMessages
-        const msgs: UIMessage[] = (chat.messages ?? []).map((m) => ({
-          id: m.id,
-          role: m.role as 'user' | 'assistant',
-          content: m.content,
-        }))
+        // Convert API messages to UIMessages, merging tool messages into assistant
+        const msgs: UIMessage[] = []
+        for (const m of chat.messages ?? []) {
+          if (m.role === 'user') {
+            msgs.push({ id: m.id, role: 'user', content: m.content })
+          } else if (m.role === 'assistant') {
+            msgs.push({ id: m.id, role: 'assistant', content: m.content, toolUses: [] })
+          } else if (m.role === 'tool') {
+            // Attach tool use to the last assistant message
+            const lastAssistant = [...msgs].reverse().find((msg) => msg.role === 'assistant')
+            if (lastAssistant) {
+              let toolInput: Record<string, unknown> | undefined
+              try {
+                if (m.toolInput) toolInput = JSON.parse(m.toolInput) as Record<string, unknown>
+              } catch { /* ignore */ }
+              lastAssistant.toolUses = [
+                ...(lastAssistant.toolUses ?? []),
+                { id: m.id, toolName: m.toolName ?? 'unknown', toolInput },
+              ]
+            }
+          }
+        }
         setMessages(msgs)
       } catch {
         setMessages([])
