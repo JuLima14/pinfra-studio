@@ -8,16 +8,18 @@ import (
 	"syscall"
 	"time"
 
+	"encoding/json"
+
 	"github.com/JuLima14/claude-engine/events"
 	"github.com/JuLima14/pinfra-studio/internal/api/handlers"
 	"github.com/JuLima14/pinfra-studio/internal/api/middleware"
 	"github.com/JuLima14/pinfra-studio/internal/api/routes"
+	"github.com/JuLima14/pinfra-studio/internal/auth"
 	"github.com/JuLima14/pinfra-studio/internal/config"
 	"github.com/JuLima14/pinfra-studio/internal/repositories"
 	"github.com/JuLima14/pinfra-studio/internal/sandbox"
 	"github.com/JuLima14/pinfra-studio/internal/services"
 	"github.com/JuLima14/pinfra-studio/internal/storage"
-	"encoding/json"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -108,7 +110,16 @@ func main() {
 	fileHandler := handlers.NewFileHandler(projectRepo, cfg.DataDir, logger)
 	githubHandler := handlers.NewGitHubHandler(githubService, gitService, projectRepo, cfg.DataDir, logger)
 
-	// 9. Setup Fiber app and routes
+	// 9. Setup JWT validator for Auth0
+	var jwtValidator *auth.JWTValidator
+	if cfg.Auth0Domain != "" {
+		jwtValidator = auth.NewJWTValidator(cfg.Auth0Domain)
+		logger.Info("Auth0 JWT validation enabled", zap.String("domain", cfg.Auth0Domain))
+	} else {
+		logger.Warn("AUTH0_DOMAIN not set — auth middleware disabled (dev mode)")
+	}
+
+	// 10. Setup Fiber app and routes
 	app := fiber.New(fiber.Config{
 		JSONEncoder: json.Marshal,
 		JSONDecoder: json.Unmarshal,
@@ -119,6 +130,11 @@ func main() {
 	})
 
 	app.Use(middleware.CORS())
+
+	// Apply auth middleware if Auth0 is configured
+	if jwtValidator != nil {
+		app.Use("/api", middleware.AuthMiddleware(jwtValidator, db, logger))
+	}
 
 	routes.Register(app, projectHandler, chatHandler, messageHandler, sandboxHandler, fileHandler, githubHandler)
 

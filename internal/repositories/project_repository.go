@@ -12,9 +12,9 @@ import (
 type ProjectRepository interface {
 	Create(ctx context.Context, project *models.Project) error
 	Update(ctx context.Context, project *models.Project) error
-	Delete(ctx context.Context, id uuid.UUID) error
-	FindByID(ctx context.Context, id uuid.UUID) (*models.Project, error)
-	FindAll(ctx context.Context) ([]*models.Project, error)
+	Delete(ctx context.Context, tenantID, id uuid.UUID) error
+	FindByID(ctx context.Context, tenantID, id uuid.UUID) (*models.Project, error)
+	FindByTenant(ctx context.Context, tenantID uuid.UUID) ([]*models.Project, error)
 	UpdateSetupStatus(ctx context.Context, id uuid.UUID, status string, errorMsg string) error
 }
 
@@ -40,32 +40,33 @@ func (r *projectRepository) Update(ctx context.Context, project *models.Project)
 	return nil
 }
 
-func (r *projectRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	if err := r.db.WithContext(ctx).Delete(&models.Project{}, "id = ?", id).Error; err != nil {
+func (r *projectRepository) Delete(ctx context.Context, tenantID, id uuid.UUID) error {
+	if err := r.db.WithContext(ctx).Delete(&models.Project{}, "id = ? AND tenant_id = ?", id, tenantID).Error; err != nil {
 		return fmt.Errorf("failed to delete project: %w", err)
 	}
 	return nil
 }
 
-func (r *projectRepository) FindByID(ctx context.Context, id uuid.UUID) (*models.Project, error) {
+func (r *projectRepository) FindByID(ctx context.Context, tenantID, id uuid.UUID) (*models.Project, error) {
 	var project models.Project
 	if err := r.db.WithContext(ctx).
 		Preload("Chats").
 		Preload("Sandbox").
-		Where("id = ?", id).
+		Where("id = ? AND tenant_id = ?", id, tenantID).
 		First(&project).Error; err != nil {
 		return nil, fmt.Errorf("failed to find project by id: %w", err)
 	}
 	return &project, nil
 }
 
-func (r *projectRepository) FindAll(ctx context.Context) ([]*models.Project, error) {
+func (r *projectRepository) FindByTenant(ctx context.Context, tenantID uuid.UUID) ([]*models.Project, error) {
 	var projects []*models.Project
 	if err := r.db.WithContext(ctx).
 		Preload("Sandbox").
+		Where("tenant_id = ?", tenantID).
 		Order("created_at DESC").
 		Find(&projects).Error; err != nil {
-		return nil, fmt.Errorf("failed to find all projects: %w", err)
+		return nil, fmt.Errorf("failed to find projects by tenant: %w", err)
 	}
 	return projects, nil
 }

@@ -50,8 +50,8 @@ func NewChatService(
 	}
 }
 
-func (s *ChatService) CreateChat(ctx context.Context, projectID uuid.UUID) (*models.Chat, error) {
-	project, err := s.projectRepo.FindByID(ctx, projectID)
+func (s *ChatService) CreateChat(ctx context.Context, tenantID, projectID uuid.UUID) (*models.Chat, error) {
+	project, err := s.projectRepo.FindByID(ctx, tenantID, projectID)
 	if err != nil {
 		return nil, fmt.Errorf("find project: %w", err)
 	}
@@ -132,13 +132,13 @@ func (s *ChatService) DeleteChat(ctx context.Context, chatID uuid.UUID) error {
 	return s.chatRepo.Delete(ctx, chatID)
 }
 
-func (s *ChatService) SendMessage(ctx context.Context, chatID uuid.UUID, content string) error {
+func (s *ChatService) SendMessage(ctx context.Context, tenantID, chatID uuid.UUID, content string) error {
 	chat, err := s.chatRepo.FindByID(ctx, chatID)
 	if err != nil {
 		return fmt.Errorf("find chat: %w", err)
 	}
 
-	project, err := s.projectRepo.FindByID(ctx, chat.ProjectID)
+	project, err := s.projectRepo.FindByID(ctx, tenantID, chat.ProjectID)
 	if err != nil {
 		return fmt.Errorf("find project: %w", err)
 	}

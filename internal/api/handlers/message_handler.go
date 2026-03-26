@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/JuLima14/claude-engine/events"
+	"github.com/JuLima14/pinfra-studio/internal/api/middleware"
 	"github.com/JuLima14/pinfra-studio/internal/repositories"
 	"github.com/JuLima14/pinfra-studio/internal/services"
 	"github.com/gofiber/fiber/v2"
@@ -37,6 +38,7 @@ func NewMessageHandler(
 
 // SendMessage POST /api/v1/projects/:id/chats/:chatId/messages
 func (h *MessageHandler) SendMessage(c *fiber.Ctx) error {
+	user := middleware.GetUser(c)
 	chatID, err := uuid.Parse(c.Params("chatId"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid chat id"})
@@ -52,7 +54,11 @@ func (h *MessageHandler) SendMessage(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "content is required"})
 	}
 
-	if err := h.chatService.SendMessage(c.Context(), chatID, body.Content); err != nil {
+	tenantID := uuid.Nil
+	if user != nil {
+		tenantID = user.TenantID
+	}
+	if err := h.chatService.SendMessage(c.Context(), tenantID, chatID, body.Content); err != nil {
 		h.logger.Error("send message failed", zap.Error(err))
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}

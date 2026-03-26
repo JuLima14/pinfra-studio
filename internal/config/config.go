@@ -13,6 +13,9 @@ type Config struct {
 	SandboxImage   string
 	SandboxPortMin int
 	SandboxPortMax int
+
+	// Auth0 (shared with infra-platform)
+	Auth0Domain string
 }
 
 func Load() *Config {
@@ -27,12 +30,13 @@ func Load() *Config {
 
 	return &Config{
 		Port:           getEnv("PORT", "8090"),
-		DatabaseURL:    getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5433/pinfra_studio?sslmode=disable"),
-		RedisURL:       getEnv("REDIS_URL", "redis://localhost:6380/0"),
+		DatabaseURL:    getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/infraplatform?sslmode=disable"),
+		RedisURL:       getEnv("REDIS_URL", "redis://localhost:6379/0"),
 		DataDir:        dataDir,
 		SandboxImage:   getEnv("SANDBOX_IMAGE", "pinfra-sandbox:latest"),
 		SandboxPortMin: 3100,
 		SandboxPortMax: 3999,
+		Auth0Domain:    getEnv("AUTH0_DOMAIN", ""),
 	}
 }
 

@@ -17,6 +17,8 @@ const (
 
 type Project struct {
 	ID            uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
+	TenantID      uuid.UUID `gorm:"type:uuid;not null;index" json:"tenantId"`
+	UserID        uuid.UUID `gorm:"type:uuid;not null;index" json:"userId"`
 	Name          string    `gorm:"not null" json:"name"`
 	Slug          string    `gorm:"uniqueIndex;not null" json:"slug"`
 	Template      string    `gorm:"default:'next-app'" json:"template"`

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/JuLima14/pinfra-studio/internal/api/middleware"
 	"github.com/JuLima14/pinfra-studio/internal/services"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -36,12 +37,13 @@ func (h *ChatHandler) ListChats(c *fiber.Ctx) error {
 
 // CreateChat POST /api/v1/projects/:id/chats
 func (h *ChatHandler) CreateChat(c *fiber.Ctx) error {
+	user := middleware.GetUser(c)
 	projectID, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid project id"})
 	}
 
-	chat, err := h.chatService.CreateChat(c.Context(), projectID)
+	chat, err := h.chatService.CreateChat(c.Context(), user.TenantID, projectID)
 	if err != nil {
 		h.logger.Error("create chat failed", zap.Error(err))
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})

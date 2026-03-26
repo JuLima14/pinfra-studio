@@ -3,6 +3,7 @@ package handlers
 import (
 	"path/filepath"
 
+	"github.com/JuLima14/pinfra-studio/internal/api/middleware"
 	"github.com/JuLima14/pinfra-studio/internal/repositories"
 	"github.com/JuLima14/pinfra-studio/internal/services"
 	"github.com/gofiber/fiber/v2"
@@ -51,7 +52,12 @@ func (h *GitHubHandler) ConnectGitHub(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "repo_url is required"})
 	}
 
-	project, err := h.projectRepo.FindByID(c.Context(), projectID)
+	user := middleware.GetUser(c)
+	tenantID := uuid.Nil
+	if user != nil {
+		tenantID = user.TenantID
+	}
+	project, err := h.projectRepo.FindByID(c.Context(), tenantID, projectID)
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "project not found"})
 	}
@@ -78,7 +84,12 @@ func (h *GitHubHandler) PushToGitHub(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid project id"})
 	}
 
-	project, err := h.projectRepo.FindByID(c.Context(), projectID)
+	user := middleware.GetUser(c)
+	tenantID := uuid.Nil
+	if user != nil {
+		tenantID = user.TenantID
+	}
+	project, err := h.projectRepo.FindByID(c.Context(), tenantID, projectID)
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "project not found"})
 	}
@@ -117,7 +128,12 @@ func (h *GitHubHandler) CreatePR(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "title is required"})
 	}
 
-	project, err := h.projectRepo.FindByID(c.Context(), projectID)
+	user := middleware.GetUser(c)
+	tenantID := uuid.Nil
+	if user != nil {
+		tenantID = user.TenantID
+	}
+	project, err := h.projectRepo.FindByID(c.Context(), tenantID, projectID)
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "project not found"})
 	}

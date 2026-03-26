@@ -51,10 +51,12 @@ func NewProjectService(
 	}
 }
 
-func (s *ProjectService) CreateProject(ctx context.Context, name string) (*models.Project, error) {
+func (s *ProjectService) CreateProject(ctx context.Context, tenantID, userID uuid.UUID, name string) (*models.Project, error) {
 	slug := generateSlug(name)
 
 	project := &models.Project{
+		TenantID:    tenantID,
+		UserID:      userID,
 		Name:        name,
 		Slug:        slug,
 		Template:    "next-app",
@@ -84,16 +86,16 @@ func (s *ProjectService) CreateProject(ctx context.Context, name string) (*model
 	return project, nil
 }
 
-func (s *ProjectService) GetProject(ctx context.Context, id uuid.UUID) (*models.Project, error) {
-	return s.projectRepo.FindByID(ctx, id)
+func (s *ProjectService) GetProject(ctx context.Context, tenantID, id uuid.UUID) (*models.Project, error) {
+	return s.projectRepo.FindByID(ctx, tenantID, id)
 }
 
-func (s *ProjectService) ListProjects(ctx context.Context) ([]*models.Project, error) {
-	return s.projectRepo.FindAll(ctx)
+func (s *ProjectService) ListProjects(ctx context.Context, tenantID uuid.UUID) ([]*models.Project, error) {
+	return s.projectRepo.FindByTenant(ctx, tenantID)
 }
 
-func (s *ProjectService) DeleteProject(ctx context.Context, id uuid.UUID) error {
-	project, err := s.projectRepo.FindByID(ctx, id)
+func (s *ProjectService) DeleteProject(ctx context.Context, tenantID, id uuid.UUID) error {
+	project, err := s.projectRepo.FindByID(ctx, tenantID, id)
 	if err != nil {
 		return fmt.Errorf("find project: %w", err)
 	}
@@ -109,7 +111,7 @@ func (s *ProjectService) DeleteProject(ctx context.Context, id uuid.UUID) error 
 		s.chatRepo.Delete(ctx, chat.ID)
 	}
 
-	return s.projectRepo.Delete(ctx, id)
+	return s.projectRepo.Delete(ctx, tenantID, id)
 }
 
 func (s *ProjectService) setupProject(projectID uuid.UUID) {
