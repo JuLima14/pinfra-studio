@@ -177,7 +177,16 @@ IMPORTANT CONTEXT:
 - Keep components in src/app/ or src/components/
 - Do NOT run 'npm run dev' — the dev server is already running
 - Do NOT run 'npm install' unless adding a new dependency
-- After making changes, briefly describe what you changed and how it looks`, sbx.Port)
+- After making changes, briefly describe what you changed
+
+CRITICAL RULES:
+- Do NOT use any Skills (no Skill tool calls)
+- Do NOT use brainstorming, planning, or design skills
+- Do NOT ask to show mockups or visual companions in the browser
+- Do NOT use Agent, EnterPlanMode, or any meta-tools
+- Do NOT ask questions — just make the changes directly
+- Be concise — the user sees the result live in the preview
+- Just write code. No planning, no brainstorming, no asking for permission.`, sbx.Port)
 	}
 
 	// Run Claude async

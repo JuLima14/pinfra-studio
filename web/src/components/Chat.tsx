@@ -31,6 +31,11 @@ const HIDDEN_TOOLS = new Set([
   'NotebookEdit',
   'EnterPlanMode',
   'ExitPlanMode',
+  'Skill',
+  'AskUserQuestion',
+  'CronCreate',
+  'CronDelete',
+  'CronList',
 ])
 
 interface ChatProps {
